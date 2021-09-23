@@ -1,0 +1,8 @@
+# Contains my device Secret
+.secret.sh
+
+# PyCharm goodies
+.idea/
+
+# Documents and files I don't want in the repo
+_archive/
