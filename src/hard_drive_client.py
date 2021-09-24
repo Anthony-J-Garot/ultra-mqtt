@@ -1,31 +1,38 @@
-import time
-from losantmqtt import Device
-import shutil
+"""
+Adapted from the script
+https://docs.losant.com/mqtt/python/
+Repo: https://github.com/Losant/losant-mqtt-python
 
+NOTE: The Keepalive is < 22 seconds from connection time
+"""
+import time
+import shutil
 import sys
 import os
-# Project imports
+from losantmqtt import Device
+
+import repeat_timer
 from command import switcher
-from utils import log, new_timer
-import utils
+from utils import log
 
-# Adapted from the script
-# https://docs.losant.com/mqtt/python/
-# Repo: https://github.com/Losant/losant-mqtt-python
-#
-# NOTE: The Keepalive is < 22 seconds from connection time
-
-# Send hard drive disk space once every send_interval seconds.
+# Constants
+SPACE_TOTAL = 0
+SPACE_USED = 1
+SPACE_FREE = 2
+KEEP_ALIVE = 1
+# Send hard drive disk space once every SEND_INTERVAL seconds.
 # There doesn't seem to be much use of having this < 10 seconds since
 # Losant charting only goes down to 10s granularity.
-# send_interval = 5 * 60
-send_interval = 30
+# SEND_INTERVAL = 5 * 60
+SEND_INTERVAL = 10
+
+# Globals
 is_stopped = False
 
 # Idiot check
 if len(sys.argv) != 2:
     print("You must pass in the Access Secret")
-    exit(1)
+    sys.exit(1)
 
 # Construct device from stuff we know and secret
 device = Device(
@@ -35,11 +42,22 @@ device = Device(
 )
 
 
-# Receives triggers from Losant, e.g. push-buttons
 def on_command(device, command):
+    """
+Receives triggers from Losant, e.g. push-buttons.
+The first argument for all callbacks is the device instance.
+The second is a Dict with a name and payload.
+    """
+
+    # The Dict has some interesting stuff like the deviceid, key, secret
+    # and a few other settings. Not sure any of that is useful here, but
+    # I dumped it to the screen to remind me it's available.
+    print(f"MQTT endpoint [{device.mqtt_endpoint}]")
+    print(f"dict [{device.__dict__}]")
+
     # These are useful for debugging, but noisy for general use
     if True:
-        log("Command received.")
+        log("Command received from Losant MQTT broker.")
         log(command["name"])
         log(command["payload"])
     switcher[command["name"]](command["payload"])
@@ -47,18 +65,19 @@ def on_command(device, command):
 
 # This sends the actual data to the device
 def send_space_usage():
-    global is_stopped, device
+    global is_stopped
     if not device.is_connected():
         log("Device not connected. Turning off timer")
-        utils.repeat_timer.cancel()
+        repeat_timer.send_state_timer.cancel()
         is_stopped = True
         return
 
     # Get the hard drive space usage
-    total, used, free = shutil.disk_usage("/")
+    # total, used, free = shutil.disk_usage("/")
+    memory = shutil.disk_usage("/")
     # Convert into GB
-    used = int((used / (2 ** 30)) * 1000) / 1000
-    free = int((free / (2 ** 30)) * 1000) / 1000
+    used = int((memory[SPACE_USED] / (2 ** 30)) * 1000) / 1000
+    free = int((memory[SPACE_FREE] / (2 ** 30)) * 1000) / 1000
     # For client logging
     log(f"Used: {used} Free: {free}")
 
@@ -74,8 +93,6 @@ def send_space_usage():
 
 
 def main():
-    global device
-
     # Listen for commands.
     device.add_event_observer("command", on_command)
 
@@ -83,7 +100,8 @@ def main():
     device.connect(blocking=False)
 
     # Create a timer
-    new_timer(send_interval, send_space_usage)
+    repeat_timer.send_state_timer = repeat_timer.RepeatTimer.create(SEND_INTERVAL, send_space_usage)
+    repeat_timer.send_state_timer.start()
 
     log("Starting infinite loop")
     while not is_stopped:
@@ -91,8 +109,8 @@ def main():
         # Only valid in non-blocking mode.
         device.loop(timeout=1)
 
-        # The keepalive is about 24 seconds.
-        time.sleep(1)
+        # The keepalive max is about 24 seconds.
+        time.sleep(KEEP_ALIVE)
 
 
 if __name__ == '__main__':
@@ -100,6 +118,10 @@ if __name__ == '__main__':
         main()
     except KeyboardInterrupt:
         print('Interrupted')
+
+        is_stopped = True
+        repeat_timer.send_state_timer.cancel()
+
         try:
             sys.exit(0)
         except SystemExit:

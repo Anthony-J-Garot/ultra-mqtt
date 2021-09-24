@@ -1,7 +1,8 @@
 import os
-# Project imports
+
+import repeat_timer
 from utils import log
-import utils
+
 
 def command_add_1gb_file(payload):
     log(f"CMD> Adding 1GB File. payload {payload}")
@@ -15,15 +16,15 @@ def command_rm_1gb_file(payload):
 
 
 def command_change_send_interval(payload):
+    # At present, the payload it just a string value, not JSON.
     log(f"CMD> payload {payload}")
     new_interval = int(payload)
 
-    # Less than 10s doesn't make much sense since graphing
-    # on Losant seems to be limited to 10s
-    if new_interval < 10:
-        new_interval = 10
+    if repeat_timer.send_state_timer is None:
+        print("STILL DON'T HAVE IT")
+        return
 
-    utils.repeat_timer.update_interval(new_interval)
+    repeat_timer.send_state_timer.update_interval(new_interval)
 
 
 switcher = {
