@@ -25,5 +25,4 @@ Updates the repeat_timer's interval.
 Creates a timer based upon threading's Timer.
 Sends periodic data w/o upsetting the keepalive loop.
         """
-        log(f"Creating new timer for {duration}s")
         return RepeatTimer(duration, callback_fn)

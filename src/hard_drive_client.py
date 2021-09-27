@@ -55,11 +55,8 @@ The second is a Dict with a name and payload.
     print(f"MQTT endpoint [{device.mqtt_endpoint}]")
     print(f"dict [{device.__dict__}]")
 
-    # These are useful for debugging, but noisy for general use
-    if True:
-        log("Command received from Losant MQTT broker.")
-        log(command["name"])
-        log(command["payload"])
+    log(f"Command received from Losant MQTT broker {command['name']}.")
+    # log(command["payload"])
     switcher[command["name"]](command["payload"])
 
 
@@ -78,8 +75,9 @@ def send_space_usage():
     # Convert into GB
     used = int((memory[SPACE_USED] / (2 ** 30)) * 1000) / 1000
     free = int((memory[SPACE_FREE] / (2 ** 30)) * 1000) / 1000
+    total = int((memory[SPACE_TOTAL] / (2 ** 30)) * 1000) / 1000
     # For client logging
-    log(f"Used: {used} Free: {free}")
+    log(f"Device State: Used [{used}GB] Free [{free}GB] (of [{total}GB])")
 
     # Send attributes to Losant.
     # Note: you can send multiple states, but it's probably better to send
@@ -97,20 +95,39 @@ def main():
     device.add_event_observer("command", on_command)
 
     # Connect to Losant.
-    device.connect(blocking=False)
+    log("Connecting to Losant")
+    try:
+        device.connect(blocking=False)
+    except ConnectionRefusedError as e:
+        log(f"Connection Refused: {e}")
+        sys.exit(1)
+    except Exception as e:
+        log(f"Could not connect: {e}")
+        sys.exit(1)
+    time.sleep(KEEP_ALIVE)  # Give just a little time to actually connect
 
     # Create a timer
+    log(f"Creating {SEND_INTERVAL}s repeat timer")
     repeat_timer.send_state_timer = repeat_timer.RepeatTimer.create(SEND_INTERVAL, send_space_usage)
     repeat_timer.send_state_timer.start()
 
     log("Starting infinite loop")
+    not_connected_count = 0
     while not is_stopped:
         # Loops the network stack for the connection.
         # Only valid in non-blocking mode.
         device.loop(timeout=1)
 
-        # The keepalive max is about 24 seconds.
+        # The keepalive max is about 24 seconds for my location.
         time.sleep(KEEP_ALIVE)
+
+        # So far, this hasn't been needed. There doesn't appear
+        # to be a way to disconnect from the Losant site. I suppose
+        # I could unplug an Ethernet cable . . . .
+        if not device.is_connected():
+            not_connected_count += 1
+            if not_connected_count > 1:
+                log(f"Device not connected. not_connected_count [{not_connected_count}]")
 
 
 if __name__ == '__main__':
