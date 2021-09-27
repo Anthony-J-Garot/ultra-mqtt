@@ -10,10 +10,11 @@
 #
 #    $ sudo lsof -i -P -n | grep ":8883"
 #
+# Seems to simply be broker.losant.com in DNS.
 
 MQTT_CLIENT=192.168.2.99 # My local VM
 VM=192.168.2.99          # My local VM
-LOSANT_BROKER=0.0.0.0    # Masking Losant's IP. See above on how to find it.
+LOSANT_BROKER=broker.losant.com
 PORT=8883                # SSL version
 
 case $1 in
