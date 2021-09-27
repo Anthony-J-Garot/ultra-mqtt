@@ -5,6 +5,11 @@ import unittest
 import device_wrap
 
 
+class MockDevice:
+    is_connected = lambda x: True
+    send_state = lambda state, time_like: None
+
+
 class UltraMqttTestCase(unittest.TestCase):
 
     @classmethod
@@ -34,14 +39,17 @@ class UltraMqttTestCase(unittest.TestCase):
 
     # ./runtests.sh test_device_wrap test_send_space_usage
     def test_send_space_usage(self):
-        class MockDevice:
-            is_connected = lambda x: True
-            send_state = lambda state, time_like: None
-
         device = MockDevice()
 
         result = device_wrap.send_space_usage(device)
-        self.assertTrue(result, "Should have send space usage")
+        self.assertTrue(result, "Should have sent space usage")
+
+    # ./runtests.sh test_device_wrap test_send_random
+    def test_send_random(self):
+        device = MockDevice()
+
+        result = device_wrap.send_space_usage(device)
+        self.assertTrue(result, "Should have sent random usage")
 
 
 if __name__ == '__main__':

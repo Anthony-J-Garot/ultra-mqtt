@@ -24,7 +24,7 @@ SEND_INTERVAL = 10
 is_stopped = False
 
 # Idiot check
-if len(sys.argv) != 2:
+if len(sys.argv) < 2:
     print("You must pass in the Access Secret")
     sys.exit(1)
 
@@ -51,10 +51,14 @@ Main function for MQTT Client.
     time.sleep(KEEP_ALIVE)  # Give just a little time to actually connect
 
     # Create a timer
-    log(f"Creating {SEND_INTERVAL}s repeat timer")
+    timer = "send_space_usage" # default value
+    # Allow a different timer function name to be passed in
+    if len(sys.argv) == 3:
+        timer = sys.argv[2]
+    log(f"Creating {timer} repeat timer @ interval {SEND_INTERVAL}s")
     repeat_timer.send_state_timer = repeat_timer.RepeatTimer.create(
         SEND_INTERVAL,
-        device_wrap.send_space_usage,
+        eval(f"device_wrap.{timer}"),
         device
     )
     repeat_timer.send_state_timer.start()
