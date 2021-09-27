@@ -30,6 +30,10 @@ connection alive.
 I threw all the "commands" (on_command) into a single file under 
 a switcher.
 
+I've included a sh script that I used to test what happens when a
+network connection goes south. From this I was able to trap and 
+test the connection without unplugging cables.
+
 # The Dashboard
 
 ## The layout
