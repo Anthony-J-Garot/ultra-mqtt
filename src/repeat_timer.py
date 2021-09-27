@@ -17,12 +17,13 @@ Updates the repeat_timer's interval.
         """
         # Less than 10s doesn't make much sense since graphing on Losant seems to be limited to 10s
         new_interval = max(new_interval, 10)
+        log(f"Updated interval to [{new_interval}s]")
         self.interval = new_interval
 
     @staticmethod
-    def create(duration, callback_fn):
+    def create(duration, callback_fn, *args):
         """
 Creates a timer based upon threading's Timer.
 Sends periodic data w/o upsetting the keepalive loop.
         """
-        return RepeatTimer(duration, callback_fn)
+        return RepeatTimer(duration, callback_fn, args)

@@ -1,5 +1,4 @@
 import os
-
 import repeat_timer
 from utils import log
 
@@ -17,7 +16,7 @@ def command_rm_1gb_file(payload):
 
 def command_change_send_interval(payload):
     # At present, the payload it just a string value, not JSON.
-    log(f"CMD> payload {payload}")
+    log(f"CMD> payload [{payload}]")
     new_interval = int(payload)
 
     if repeat_timer.send_state_timer is None:
