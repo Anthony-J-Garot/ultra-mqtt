@@ -1,13 +1,22 @@
+"""
+This module provides a "repeat timer" based upon threading. This allows the sending
+of periodic data without interfering with the keepalive connection loop.
+"""
 from threading import Timer
 from utils import log
 
 send_state_timer = None
 
 
-# Decide when to send data
 # https://stackoverflow.com/a/48741004/4171820
 class RepeatTimer(Timer):
+    """
+Provides the repeat timer functionality.
+    """
     def run(self):
+        """
+This is what causes the repeat.
+        """
         while not self.finished.wait(self.interval):
             self.function(*self.args, **self.kwargs)
 

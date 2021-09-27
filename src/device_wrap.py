@@ -1,15 +1,23 @@
 """
 Device handlers and such.
 """
+import shutil
+from losantmqtt import Device
+import repeat_timer
 from utils import log
 from command import switcher
-import repeat_timer
-import shutil
 
 # Constants
 SPACE_TOTAL = 0
 SPACE_USED = 1
 SPACE_FREE = 2
+
+
+def create_device(device_id, key, secret):
+    """
+Wraps around the Losant Device() constructor.
+    """
+    return Device(device_id, key, secret)
 
 
 def on_command(device, command):
@@ -30,14 +38,16 @@ The second is a Dict with a name and payload.
     switcher[command["name"]](command["payload"])
 
 
-# This sends the actual data to the device
 def send_space_usage(device):
+    """
+This sends the actual data to the device.
+    """
     global is_stopped
     if not device.is_connected():
         log("Device not connected. Turning off timer")
         repeat_timer.send_state_timer.cancel()
         is_stopped = True
-        return
+        return False
 
     # Get the hard drive space usage
     # total, used, free = shutil.disk_usage("/")
@@ -57,4 +67,11 @@ def send_space_usage(device):
         "drive-space-used": used,
         "drive-space-free": free
     }
-    device.send_state(payload)
+
+    try:
+        device.send_state(payload)
+    except Exception as error:
+        log(f"Could not send_state: {error}")
+        return False
+
+    return True

@@ -8,18 +8,16 @@ NOTE: The Keepalive is < 22 seconds from connection time
 import time
 import sys
 import os
-from losantmqtt import Device
-
 import repeat_timer
 from utils import log
 import device_wrap
 
 # Constants
 KEEP_ALIVE = 1
-# Send hard drive disk space once every SEND_INTERVAL seconds.
-# There doesn't seem to be much use of having this < 10 seconds since
+DEVICE_ID = "614b9487f397de0006ba4c21"
+DEVICE_SECRET_KEY = "070c3950-c1e4-4c89-b030-0832441c79fd"
+# There isn't much use of having the send interval < 10 seconds since
 # Losant charting only goes down to 10s granularity.
-# SEND_INTERVAL = 5 * 60
 SEND_INTERVAL = 10
 
 # Globals
@@ -30,15 +28,16 @@ if len(sys.argv) != 2:
     print("You must pass in the Access Secret")
     sys.exit(1)
 
-# Construct device from stuff we know and secret
-device = Device(
-    "614b9487f397de0006ba4c21",
-    "070c3950-c1e4-4c89-b030-0832441c79fd",
-    sys.argv[1]
-)
+device = device_wrap.create_device(DEVICE_ID, DEVICE_SECRET_KEY, sys.argv[1])
+if device is None:
+    sys.exit(1)
 
 
 def main():
+    """
+Main function for MQTT Client.
+    """
+
     # Listen for commands.
     device.add_event_observer("command", device_wrap.on_command)
 
@@ -46,17 +45,18 @@ def main():
     log("Connecting to Losant")
     try:
         device.connect(blocking=False)
-    except ConnectionRefusedError as e:
-        log(f"Connection Refused: {e}")
-        sys.exit(1)
-    except Exception as e:
-        log(f"Could not connect: {e}")
+    except ConnectionRefusedError as error:
+        log(f"Connection Refused: {error}")
         sys.exit(1)
     time.sleep(KEEP_ALIVE)  # Give just a little time to actually connect
 
     # Create a timer
     log(f"Creating {SEND_INTERVAL}s repeat timer")
-    repeat_timer.send_state_timer = repeat_timer.RepeatTimer.create(SEND_INTERVAL, device_wrap.send_space_usage, device)
+    repeat_timer.send_state_timer = repeat_timer.RepeatTimer.create(
+        SEND_INTERVAL,
+        device_wrap.send_space_usage,
+        device
+    )
     repeat_timer.send_state_timer.start()
 
     log("Starting infinite loop")

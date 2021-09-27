@@ -1,3 +1,6 @@
+"""
+General utilities used throughout the application.
+"""
 from datetime import datetime
 
 # Nicer log output

@@ -2,8 +2,7 @@
 Unit test all the things!
 """
 import unittest
-import utils
-from datetime import datetime
+import device_wrap
 
 
 class UltraMqttTestCase(unittest.TestCase):
@@ -33,13 +32,16 @@ class UltraMqttTestCase(unittest.TestCase):
         # print("UT>tearDown")
         pass
 
-    # ./runtests.sh test_utils test_log
-    def test_log(self):
-        msg = "Hello"
-        now = datetime.now()
-        expected = f"{now.strftime('%H:%M:%S')}> {msg}"
-        result = utils.log(msg, now)
-        self.assertEqual(expected, result, "Log should have returned consistent log message")
+    # ./runtests.sh test_device_wrap test_send_space_usage
+    def test_send_space_usage(self):
+        class MockDevice:
+            is_connected = lambda x: True
+            send_state = lambda state, time_like: None
+
+        device = MockDevice()
+
+        result = device_wrap.send_space_usage(device)
+        self.assertTrue(result, "Should have send space usage")
 
 
 if __name__ == '__main__':
