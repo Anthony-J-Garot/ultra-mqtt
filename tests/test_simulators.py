@@ -2,7 +2,7 @@
 Unit test all the things!
 """
 import unittest
-import device_wrap
+import simulators
 
 
 class MockDevice:
@@ -37,18 +37,18 @@ class UltraMqttTestCase(unittest.TestCase):
         # print("UT>tearDown")
         pass
 
-    # ./runtests.sh test_device_wrap test_send_space_usage
+    # ./runtests.sh test_simulators test_send_space_usage
     def test_send_space_usage(self):
         device = MockDevice()
 
-        result = device_wrap.send_space_usage(device)
+        result = simulators.send_space_usage(device)
         self.assertTrue(result, "Should have sent space usage")
 
-    # ./runtests.sh test_device_wrap test_send_random
+    # ./runtests.sh test_simulators test_send_random
     def test_send_random(self):
         device = MockDevice()
 
-        result = device_wrap.send_space_usage(device)
+        result = simulators.send_space_usage(device)
         self.assertTrue(result, "Should have sent random usage")
 
 

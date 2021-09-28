@@ -1,7 +1,7 @@
 """
 Device handlers and such.
 """
-import random
+import secrets
 import shutil
 
 from losantmqtt import Device
@@ -19,6 +19,7 @@ MAX_WALK = 3.000  # Maximum for random walk
 
 # Module global
 cur_used = 15.000  # A mid value
+secretsGenerator = secrets.SystemRandom()
 
 
 def create_device(device_id, key, secret):
@@ -99,8 +100,8 @@ cannot do.
         return False
 
     # Convert into GB
-    random.seed()
-    used = int(random.uniform(LOWER_BOUND, UPPER_BOUND) * 1000) / 1000
+    secretsGenerator.seed()
+    used = int(secretsGenerator.uniform(LOWER_BOUND, UPPER_BOUND) * 1000) / 1000
     total = UPPER_BOUND
     free = int((total - used) * 1000) / 1000
     # For client logging
@@ -138,8 +139,8 @@ emulates what a hard drive would probably do.
         return False
 
     # Convert into GB
-    random.seed()
-    walk = random.uniform(-MAX_WALK, MAX_WALK)
+    secretsGenerator.seed()
+    walk = secretsGenerator.uniform(-MAX_WALK, MAX_WALK)
     used = int((cur_used + walk) * 1000) / 1000
     used = min(used, UPPER_BOUND)
     used = max(used, LOWER_BOUND)

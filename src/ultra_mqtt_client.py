@@ -10,7 +10,7 @@ import sys
 import os
 import repeat_timer
 from utils import log
-import device_wrap
+import simulators
 
 # Constants
 KEEP_ALIVE = 1
@@ -28,7 +28,7 @@ if len(sys.argv) < 2:
     print("You must pass in the Access Secret")
     sys.exit(1)
 
-device = device_wrap.create_device(DEVICE_ID, DEVICE_SECRET_KEY, sys.argv[1])
+device = simulators.create_device(DEVICE_ID, DEVICE_SECRET_KEY, sys.argv[1])
 if device is None:
     sys.exit(1)
 
@@ -39,7 +39,7 @@ Main function for MQTT Client.
     """
 
     # Listen for commands.
-    device.add_event_observer("command", device_wrap.on_command)
+    device.add_event_observer("command", simulators.on_command)
 
     # Connect to Losant.
     log("Connecting to Losant")
@@ -58,7 +58,7 @@ Main function for MQTT Client.
     log(f"Creating {timer} repeat timer @ interval {SEND_INTERVAL}s")
     repeat_timer.send_state_timer = repeat_timer.RepeatTimer.create(
         SEND_INTERVAL,
-        eval(f"device_wrap.{timer}"),
+        eval(f"simulators.{timer}"),
         device
     )
     repeat_timer.send_state_timer.start()
