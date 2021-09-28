@@ -20,19 +20,23 @@ push-button commands from the Losant dashboard.
 
 # Coding Details
 
-This is all pretty simple. I didn't even write unit tests, which
-is rare for me. Unit test all the things!
-
 The RepeatTimer is used such that I can send data when I want to 
 send it despite the event loop running every second to keep the
 connection alive.
 
-I threw all the "commands" (on_command) into a single file under 
+The "commands" (for on_command) were put into a single module under 
 a switcher.
 
-I've included a sh script that I used to test what happens when a
-network connection goes south. From this I was able to trap and 
+I've included a shel (.sh) script for redirecting network traffic
+from broker.losant.com to my own VM. From this I was able to trap and 
 test the connection without unplugging cables.
+
+Finally, I put the data-generating callback functions in a separate
+module called simulators.py. Originally this project was to send
+hard drive free/used space to the Losant MQTT Broker. I expanded on
+this idea to create a "random simulator" that is already better than
+the one offered on the Losant site because I can send floating point
+numbers.
 
 # The Dashboard
 
@@ -94,3 +98,34 @@ And Losant doesn't give you a warning or nuthin'. Hmmm.
 Using the "Delete Data" option, when successful, deletes not only
 the connection log but the saved state data. That's nice for "resetting"
 the graph on the dashboard.
+
+# Simulators
+
+Simulators are simply the data generating callback functions. These
+generate data and send to Losant. The initial one was send_space_usage(),
+which sends amount of spaced used on my hard drive. Of course, these
+values don't change often or by much on a GB scale.
+
+I soon realized that I could create *other* data generation functions
+and swap them out. Ah ha! Now this tool is becoming useful, which is 
+what any self-respecting Piglet wants to be. Thus, run.sh now allows 
+a second argument to name the simulator to invoke at run-time.
+
+The first alternate simulator was send_random(). While this works,
+and is similar to the Device Simulator on the Losant website, it 
+doesn't seem real-world. Maybe there is a stress-testing scenario
+that might benefit from this, but I am scratching my head on this.
+
+The send_random_walk() simulator was next, which better represents
+actual real-world data. At the time of this writing, I noticed that
+the overnight values seem to cling toward the upper bound. I'm 
+switching over to secrets.SystemRandom for random number generation, 
+which may improve the results.
+
+The below picture is the overnight output of the random walk sending
+data every 120s. This was before I switched to secrets.SystemRandom. 
+It's not bad . . . it does show a *possible* real-world scenario. I 
+just don't know if this is a *probable* real-world scenario.
+
+![](docs/random_walk.png)
+
