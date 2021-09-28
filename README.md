@@ -17,6 +17,11 @@ The basis of this code came from the
 I fleshed it out a bit, added a secondary timer, and accepted 
 push-button commands from the Losant dashboard.
 
+## Useful Links
+
+* [Losant Python MQTT Client](https://github.com/Losant/losant-mqtt-python)
+* [Using secrets.SystemRandom()](https://pynative.com/python-secrets-module/#h-class-secrets-systemrandom)
+
 
 # Coding Details
 
@@ -36,7 +41,8 @@ module called simulators.py. Originally this project was to send
 hard drive free/used space to the Losant MQTT Broker. I expanded on
 this idea to create a "random simulator" that is already better than
 the one offered on the Losant site because I can send floating point
-numbers.
+numbers. See the Simulators section below for more details and 
+simulators.
 
 # The Dashboard
 
