@@ -37,18 +37,18 @@ class UltraMqttTestCase(unittest.TestCase):
         # print("UT>tearDown")
         pass
 
-    # ./runtests.sh test_simulators test_send_space_usage
-    def test_send_space_usage(self):
+    # ./runtests.sh test_simulators test_space_usage
+    def test_space_usage(self):
         device = MockDevice()
 
-        result = simulators.send_space_usage(device)
+        result = simulators.space_usage(device)
         self.assertTrue(result, "Should have sent space usage")
 
-    # ./runtests.sh test_simulators test_send_random
-    def test_send_random(self):
+    # ./runtests.sh test_simulators test_random_scatter
+    def test_random_scatter(self):
         device = MockDevice()
 
-        result = simulators.send_space_usage(device)
+        result = simulators.space_usage(device)
         self.assertTrue(result, "Should have sent random usage")
 
 

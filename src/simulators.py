@@ -6,7 +6,7 @@ import shutil
 
 from losantmqtt import Device
 import repeat_timer
-from utils import log
+from utils import log, wrap_send_state, deviation
 from command import switcher
 
 # Constants
@@ -17,8 +17,9 @@ LOWER_BOUND = 0.000
 UPPER_BOUND = 28.910  # Based upon my VM size
 MAX_WALK = 3.000  # Maximum for random walk
 
-# Module global
-cur_used = 15.000  # A mid value
+# Module globals
+used_hold = None
+free_hold = None
 secretsGenerator = secrets.SystemRandom()
 
 
@@ -47,7 +48,7 @@ The second is a Dict with a name and payload.
     switcher[command["name"]](command["payload"])
 
 
-def send_space_usage(device):
+def space_usage(device):
     """
 This sends the hard drive space usage data to the Losant device.
     """
@@ -77,16 +78,10 @@ This sends the hard drive space usage data to the Losant device.
         "drive-space-free": free
     }
 
-    try:
-        device.send_state(payload)
-    except Exception as error:
-        log(f"Could not send_state: {error}")
-        return False
-
-    return True
+    return wrap_send_state(device, payload)
 
 
-def send_random(device):
+def random_scatter(device):
     """
 This sends random data to the Losant device. Is this useful? Perhaps not.
 But this function sends floating point values, which the Losant Simulator
@@ -116,36 +111,36 @@ cannot do.
         "drive-space-free": free
     }
 
-    try:
-        device.send_state(payload)
-    except Exception as error:
-        log(f"Could not send_state: {error}")
-        return False
-
-    return True
+    return wrap_send_state(device, payload)
 
 
-def send_random_walk(device):
+def random_walk(device):
     """
 Random data isn't very interesting because it's just all over the place.
 This adds or subtracts a random amount from the current value, which better
 emulates what a hard drive would probably do.
     """
-    global is_stopped, cur_used
+    global is_stopped, used_hold
     if not device.is_connected():
         log("Device not connected. Turning off timer")
         repeat_timer.send_state_timer.cancel()
         is_stopped = True
         return False
 
+    # Set default hold values
+    if used_hold is None:
+        # Initialize to actual hard drive value
+        memory = shutil.disk_usage("/")
+        used_hold = round(memory[SPACE_USED] / (2 ** 30), 3)
+        free_hold = round(UPPER_BOUND - used_hold, 3)
+
     # Convert into GB
     secretsGenerator.seed()
     walk = secretsGenerator.uniform(-MAX_WALK, MAX_WALK)
-    used = round(cur_used + walk, 3)
+    used = round(used_hold + walk, 3)
     used = min(used, UPPER_BOUND)
     used = max(used, LOWER_BOUND)
     # print(f"walk {walk} used {used}")
-    cur_used = used  # Keep track of where we are
     total = UPPER_BOUND
     free = round(total - used, 3)
     # For client logging
@@ -160,17 +155,31 @@ emulates what a hard drive would probably do.
         "drive-space-free": free
     }
 
-    try:
-        device.send_state(payload)
-    except Exception as error:
-        log(f"Could not send_state: {error}")
-        return False
+    LOW_POWER = True  # For now, just a simple switch. Not sure how I will tie this in.
+    DEVIATION = 5  # Percent
+    if LOW_POWER:
+        cur_deviation = deviation(used, used_hold)
+        if cur_deviation > DEVIATION:
+            log(f"deviation [{cur_deviation}] > [{DEVIATION}] . . . sending.")
+            if not wrap_send_state(device, payload):
+                return False
+            # Update hold values only if reported
+            used_hold = used
+            free_hold = free
+        else:
+            log(f"deviation [{cur_deviation}] NOT > [{DEVIATION}] . . . so, NOT sending.")
 
-    return True
+        return True
+    else:
+        # Keep track of hold values
+        used_hold = used
+        free_hold = free
+
+        return wrap_send_state(device, payload)
 
 
 dispatcher = {
-    "send_space_usage": send_space_usage,
-    "send_random_walk": send_random_walk,
-    "send_random": send_random
+    "space_usage": space_usage,
+    "random_walk": random_walk,
+    "random_scatter": random_scatter
 }

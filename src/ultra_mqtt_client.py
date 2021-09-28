@@ -51,7 +51,7 @@ Main function for MQTT Client.
     time.sleep(KEEP_ALIVE)  # Give just a little time to actually connect
 
     # Choose the simulator
-    simulator = "send_space_usage"  # default value
+    simulator = "space_usage"  # default value
     if len(sys.argv) == 3:
         simulator = sys.argv[2]
     if simulator not in simulators.dispatcher:

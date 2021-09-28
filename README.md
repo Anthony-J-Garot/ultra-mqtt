@@ -108,7 +108,7 @@ the graph on the dashboard.
 # Simulators
 
 Simulators are simply the data generating callback functions. These
-generate data and send to Losant. The initial one was send_space_usage(),
+generate data and send to Losant. The initial one was space_usage(),
 which sends amount of spaced used on my hard drive. Of course, these
 values don't change often or by much on a GB scale.
 
@@ -117,12 +117,12 @@ and swap them out. Ah ha! Now this tool is becoming useful, which is
 what any self-respecting Piglet wants to be. Thus, run.sh now allows 
 a second argument to name the simulator to invoke at run-time.
 
-The first alternate simulator was send_random(). While this works,
+The first alternate simulator was random_scatter(). While this works,
 and is similar to the Device Simulator on the Losant website, it 
 doesn't seem real-world. Maybe there is a stress-testing scenario
 that might benefit from this, but I am scratching my head on this.
 
-The send_random_walk() simulator was next, which better represents
+The random_walk() simulator was next, which better represents
 actual real-world data. At the time of this writing, I noticed that
 the overnight values seem to cling toward the upper bound. I'm 
 switching over to secrets.SystemRandom for random number generation, 
