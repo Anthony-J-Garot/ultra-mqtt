@@ -50,15 +50,18 @@ Main function for MQTT Client.
         sys.exit(1)
     time.sleep(KEEP_ALIVE)  # Give just a little time to actually connect
 
-    # Create a timer
-    timer = "send_space_usage" # default value
-    # Allow a different timer function name to be passed in
+    # Choose the simulator
+    simulator = "send_space_usage"  # default value
     if len(sys.argv) == 3:
-        timer = sys.argv[2]
-    log(f"Creating {timer} repeat timer @ interval {SEND_INTERVAL}s")
+        simulator = sys.argv[2]
+    if simulator not in simulators.dispatcher:
+        log("Unknown simulator")
+        sys.exit(1)
+
+    log(f"Creating [{simulator}] simulator @ interval [{SEND_INTERVAL}s]")
     repeat_timer.send_state_timer = repeat_timer.RepeatTimer.create(
         SEND_INTERVAL,
-        eval(f"simulators.{timer}"),
+        simulators.dispatcher[simulator],
         device
     )
     repeat_timer.send_state_timer.start()

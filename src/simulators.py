@@ -62,9 +62,9 @@ This sends the hard drive space usage data to the Losant device.
     # total, used, free = shutil.disk_usage("/")
     memory = shutil.disk_usage("/")
     # Convert into GB
-    used = int((memory[SPACE_USED] / (2 ** 30)) * 1000) / 1000
-    free = int((memory[SPACE_FREE] / (2 ** 30)) * 1000) / 1000
-    total = int((memory[SPACE_TOTAL] / (2 ** 30)) * 1000) / 1000
+    used = round(memory[SPACE_USED] / (2 ** 30), 3)
+    free = round(memory[SPACE_FREE] / (2 ** 30), 3)
+    total = round(memory[SPACE_TOTAL] / (2 ** 30), 3)
     # For client logging
     log(f"Device State: Used [{used} GB] Free [{free} GB] (of [{total} GB])")
 
@@ -101,9 +101,9 @@ cannot do.
 
     # Convert into GB
     secretsGenerator.seed()
-    used = int(secretsGenerator.uniform(LOWER_BOUND, UPPER_BOUND) * 1000) / 1000
+    used = round(secretsGenerator.uniform(LOWER_BOUND, UPPER_BOUND), 3)
     total = UPPER_BOUND
-    free = int((total - used) * 1000) / 1000
+    free = round(total - used, 3)
     # For client logging
     log(f"Device State: Used [{used} GB] Free [{free} GB] (of [{total} GB])")
 
@@ -141,13 +141,13 @@ emulates what a hard drive would probably do.
     # Convert into GB
     secretsGenerator.seed()
     walk = secretsGenerator.uniform(-MAX_WALK, MAX_WALK)
-    used = int((cur_used + walk) * 1000) / 1000
+    used = round(cur_used + walk, 3)
     used = min(used, UPPER_BOUND)
     used = max(used, LOWER_BOUND)
     # print(f"walk {walk} used {used}")
     cur_used = used  # Keep track of where we are
     total = UPPER_BOUND
-    free = int((total - used) * 1000) / 1000
+    free = round(total - used, 3)
     # For client logging
     log(f"Device State: Used [{used} GB] Free [{free} GB] (of [{total} GB])")
 
@@ -167,3 +167,10 @@ emulates what a hard drive would probably do.
         return False
 
     return True
+
+
+dispatcher = {
+    "send_space_usage": send_space_usage,
+    "send_random_walk": send_random_walk,
+    "send_random": send_random
+}
