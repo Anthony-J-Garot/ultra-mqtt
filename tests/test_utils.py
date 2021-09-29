@@ -41,6 +41,18 @@ class UltraMqttTestCase(unittest.TestCase):
         result = utils.log(msg, now)
         self.assertEqual(expected, result, "Log should have returned consistent log message")
 
+    # ./runtests.sh test_utils test_deviation
+    def test_deviation(self):
+        deviation = utils.drive_space_deviation(5, 10)
+        self.assertEqual(5, int(deviation), "Deviation should be 5")
+
+        deviation = utils.drive_space_deviation(15.4, 17.1)
+        self.assertEqual(170, int(deviation * 100), "Deviation should be 1.70")
+
+        # Our deviation is only good to the thousandths place
+        deviation = utils.drive_space_deviation(0.000, 0.0001)
+        self.assertEqual(0, int(deviation * 100), "Deviation should be 0")
+
 
 if __name__ == '__main__':
     unittest.main()

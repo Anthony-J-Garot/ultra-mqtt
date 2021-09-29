@@ -3,8 +3,10 @@ General utilities used throughout the application.
 """
 from datetime import datetime
 
-# Figures out the deviation percent of a value from the hold value
-deviation = lambda x, hold_x: round(abs(1 - (x / hold_x)) * 100, 2)
+# Good to the thousandths place. This is based upon hard drive space.
+# For temperatures, we might be concerned with only hundredths or tenths
+# of a degree, depending upon the precision of the probe.
+drive_space_deviation = lambda x, hold_x: round(abs(x - hold_x), 3)
 
 
 # Nicer log output

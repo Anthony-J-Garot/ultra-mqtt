@@ -6,7 +6,8 @@ import shutil
 
 from losantmqtt import Device
 import repeat_timer
-from utils import log, wrap_send_state, deviation
+import utils
+from utils import log, wrap_send_state
 from command import switcher
 
 # Constants
@@ -15,7 +16,7 @@ SPACE_USED = 1
 SPACE_FREE = 2
 LOWER_BOUND = 0.000
 UPPER_BOUND = 28.910  # Based upon my VM size
-MAX_WALK = 3.000  # Maximum for random walk
+MAX_WALK = 1.000  # Maximum/Minimum (+/-) for random walk in GB.
 
 # Module globals
 used_hold = None
@@ -156,18 +157,22 @@ emulates what a hard drive would probably do.
     }
 
     LOW_POWER = True  # For now, just a simple switch. Not sure how I will tie this in.
-    DEVIATION = 5  # Percent
+    # For convenience, the MAX_DEVIATION is set to 80% of the MAX_WALK. This
+    # would be a user-set value based upon expected values. For example, if
+    # a temperature probe may be accurate to .01 degrees, but anything under a
+    # full 1.00 degree change may just be considered noise.
+    MAX_DEVIATION = MAX_WALK * .80  # allowed deviation before reporting
     if LOW_POWER:
-        cur_deviation = deviation(used, used_hold)
-        if cur_deviation > DEVIATION:
-            log(f"deviation [{cur_deviation}] > [{DEVIATION}] . . . sending.")
+        deviation = utils.drive_space_deviation(used - used_hold)
+        if deviation > MAX_DEVIATION:
+            log(f"deviation [{deviation}] > [{MAX_DEVIATION}] . . . sending message to Broker.")
             if not wrap_send_state(device, payload):
                 return False
             # Update hold values only if reported
             used_hold = used
             free_hold = free
         else:
-            log(f"deviation [{cur_deviation}] NOT > [{DEVIATION}] . . . so, NOT sending.")
+            log(f"deviation [{deviation}] NOT > [{MAX_DEVIATION}] . . . so, NOT sending to Broker.")
 
         return True
     else:
