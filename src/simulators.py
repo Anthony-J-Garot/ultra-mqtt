@@ -163,7 +163,7 @@ emulates what a hard drive would probably do.
     # full 1.00 degree change may just be considered noise.
     MAX_DEVIATION = MAX_WALK * .80  # allowed deviation before reporting
     if LOW_POWER:
-        deviation = utils.drive_space_deviation(used - used_hold)
+        deviation = utils.drive_space_deviation(used, used_hold)
         if deviation > MAX_DEVIATION:
             log(f"deviation [{deviation}] > [{MAX_DEVIATION}] . . . sending message to Broker.")
             if not wrap_send_state(device, payload):
